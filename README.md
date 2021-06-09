@@ -21,4 +21,7 @@ npm run lint
 ```
 
 ### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+See [Configuration Reference](https://cli.vuejs.org/config/)
+
+heroku setup:
+https://gist.github.com/hone/24b06869b4c1eca701f9.
