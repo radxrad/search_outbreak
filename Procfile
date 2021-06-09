@@ -1,2 +1,2 @@
-web: npm run serve
+web: yarn serve
 
