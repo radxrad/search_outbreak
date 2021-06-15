@@ -1,0 +1,9 @@
+[build]
+functions = "functions/"
+
+[dev]
+functions = "functions/"
+targetPort = 8080
+port = 8000
+
+

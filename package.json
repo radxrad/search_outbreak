@@ -7,7 +7,10 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "serve:lambda": "netlify-lambda serve lambda",
+    "build": "run-p build:**",
+    "build:app": "vue-cli-service build",
+    "build:lambda": "netlify-lambda build lambda",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
@@ -17,6 +20,7 @@
     "core-js": "^3.6.5",
     "date-and-time": "^1.0.1",
     "jsonpath": "^1.1.1",
+    "netlify-cli": "^3.37.29",
     "striptags": "^3.1.1",
     "vue": "^2.6.11"
   },
