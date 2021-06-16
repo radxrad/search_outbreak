@@ -4,10 +4,8 @@ functions = "functions"
 publish = "dist"
 
 [dev]
-command = "yarn start"
 functions = "functions"
 functionsPort = 8885
-targetPort = 8081
 port = 8000
 
 
