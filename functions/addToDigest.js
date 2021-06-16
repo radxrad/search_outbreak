@@ -1,11 +1,12 @@
 /* eslint-disable no-unused-vars */
 require('dotenv').config()
 var _ =require('lodash')
+var dateformat = require('dateformat')
 // eslint-disable-next-line no-unused-vars
 exports.handler = async function (event, context) {
 
     const Airtable = require('airtable')
-    const base = new Airtable({apiKey: process.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE)
+    const base = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE)
     const {digestId, newsItem} = JSON.parse(event.body)
 
     console.log(newsItem)
@@ -46,18 +47,25 @@ exports.addNewsToDigest = async function (digestId, NewsRecord) {
             console.log("digest " + digest)
             if (digest) {
                 console.log("digest news recs:" + digest.get('News').join(','))
-                let news = digest.get('News')
-
+                let news = []
+                try {
+                    news= digest.get('News')
+                } catch (ex) {
+                    news=[]
+                }
 
                 news.push(NewsRecord.getId())
                 console.log('news all ' + news.join(','))
                 news = _.uniq(news)
                 console.log('news unique ' + news.join(','))
+                var now = new Date();
+                let dateUpdated =dateformat(now, "isoDate")
                 table.update(
                     [{
                     "id":digest.getId(),
                     "fields": {
-                        "News": news
+                        "News": news,
+                        "Date updated":dateUpdated
                          }
                     }],
                     function (err, arecord) {

@@ -1,12 +1,12 @@
 var datasource = module.exports = function () {}
 var Airtable = require('airtable');
 //const {create} = require("lodash");
-
+require('dotenv').config()
 
 // readonly user https://support.airtable.com/hc/en-us/articles/360056249614-Creating-a-read-only-API-key
 var base = new Airtable({apiKey: 'keysRYrgqnt3ZdHJP'}).base('appPINbN9J3uvK315');
-
-
+//var base = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE);
+//{apiKey: process.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE)
 
 datasource.getTopics =   function(tableName= 'Topics'){
     return new Promise((resolve, reject) => {

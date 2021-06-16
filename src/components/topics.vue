@@ -25,7 +25,7 @@
     <b-card-group columns>
       <b-card v-for="r in records" v-bind:key="r._id">
         <b-card-header>
-          <addToDigest :digests="digests" :outbreakId="r._id"></addToDigest>
+          <addToDigest :digests="digests" :outbreakId="r._id" :outbreak-record="r"></addToDigest>
           <b-card-title>{{ r.title }}</b-card-title>
           <b-card-sub-title>{{ r.author }}</b-card-sub-title>
           <b-card-sub-title>{{ r.journal }}</b-card-sub-title>
@@ -200,6 +200,7 @@ export default {
             self.recordCount = response.data.hits.length;
             self.queryResultsCount = response.data.total;
             articles.forEach((r) => {
+              let originalJson = r
               let id = jp.query(r, '$._id', 1)
               let title = jp.query(r, '$.name', 1)
               if (title.length === 1) {
@@ -227,6 +228,7 @@ export default {
                 datePublished: pubDate,
                 dateCreated: created,
                 curationDate: curationDate,
+                originalJson:originalJson,
               })
             })
 
