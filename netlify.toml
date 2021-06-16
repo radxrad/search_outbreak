@@ -1,9 +1,11 @@
 [build]
-functions = "functions/"
-
+command = "yarn build:lambda"
+functions = "functions-build/"
+publish = "build"
 [dev]
-functions = "functions/"
-targetPort = 8080
+functions = "functions-build/"
+functionsPort = 8885
+targetPort = 8081
 port = 8000
 
 
