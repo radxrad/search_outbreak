@@ -9,8 +9,7 @@
     "start": "netlify dev",
     "serve": "vue-cli-service serve",
     "serve:lambda": "netlify-lambda serve functions",
-    "build": "run-p build:**",
-    "build:app": "vue-cli-service build",
+    "build": "vue-cli-service build",
     "build:lambda": "netlify-lambda build functions",
     "lint": "vue-cli-service lint"
   },

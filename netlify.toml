@@ -1,11 +1,11 @@
 [build]
-command = "yarn run build"
-functions = "functions-build/"
-publish = "build"
+command = "yarn build"
+functions = "functions"
+publish = "dist"
 
 [dev]
 command = "yarn start"
-functions = "functions-build/"
+functions = "functions"
 functionsPort = 8885
 targetPort = 8081
 port = 8000
