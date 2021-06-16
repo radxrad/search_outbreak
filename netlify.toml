@@ -1,7 +1,8 @@
 [build]
 command = "yarn build:lambda"
 functions = "functions-build/"
-publish = "build"
+
+
 [dev]
 functions = "functions-build/"
 functionsPort = 8885
