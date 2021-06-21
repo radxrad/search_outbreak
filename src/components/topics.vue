@@ -20,8 +20,13 @@
         </b-badge>
       </div>
     </b-row>
-    <b-row>{{ topicsAsText }} Showing:{{ recordCount }} of {{ queryResultsCount }}</b-row>
-    <addSearchToDigest :records="records"  :digests="digests"></addSearchToDigest>
+
+
+    <addSearchToDigest :records="records"  :digests="digests">
+
+    </addSearchToDigest>
+    <b-overlay :show="searchIsActive" rounded="sm">
+      <b-row>{{ topicsAsText }} Showing:{{ recordCount }} of {{ queryResultsCount }}</b-row>
     <b-card-group columns>
       <b-card v-for="r in records" v-bind:key="r._id">
         <b-card-header>
@@ -45,7 +50,14 @@
         </b-card-footer>
       </b-card>
     </b-card-group>
-
+    </b-overlay>
+    <b-alert
+        v-model="showError"
+        class="position-fixed fixed-bottom m-0 rounded-0"
+        style="z-index: 2000;"
+        variant="warning"
+        dismissible
+    >{{searchError}}</b-alert>
   </b-container>
 
 
@@ -73,9 +85,13 @@ export default {
       records: [],
       recordCount: 0,
       queryResultsCount: 0,
+      searchIsActive: false,
+      searchError: undefined,
+      showError: false,
       activeQueryTopics: [],
       activeQueryString: "",
-      activeDateSelector: "All",
+
+      activeDateSelector: "One week",
       alwaysUse: '( (COVID || coronavirus || SARS-COV2) AND @type:Publication )',
 
       dateSelectors: [
@@ -184,7 +200,8 @@ export default {
     },
     queryOutbreak(queryString, size = 200, baseurl = 'https://api.outbreak.info/resources/resource/query') {
       var self = this;
-
+      self.searchIsActive = true;
+      self.records = []
       const options = {
         method: 'GET',
         url: baseurl,
@@ -200,6 +217,7 @@ export default {
             self.records = []
             self.recordCount = response.data.hits.length;
             self.queryResultsCount = response.data.total;
+            self.searchIsActive = false;
             articles.forEach((r) => {
               let originalJson = r
               let id = jp.query(r, '$._id', 1)
@@ -234,7 +252,13 @@ export default {
             })
 
 
-          })
+          }).catch( err =>{
+        self.searchIsActive = false;
+        console.log('search error: ' + err)
+        self.records = [] // bad
+        this.searchError = 'Error happened: ' + err;
+        this.showError = true;
+      })
     },
 
   }
