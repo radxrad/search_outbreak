@@ -3,10 +3,10 @@
     <b-dropdown split
                 split-variant="outline-primary"
                 variant="primary"
-                text="Add to Digest"
+                text="Add All Records to a Digest"
                 class="m-2">
       <b-dropdown-item href="#" v-for="d in digests" v-bind:key="d.getId()"
-                       @click="addToDigest(d.getId(),outbreakRecord )">{{ d.get('Name') }}
+                       @click="addRecordsToDigest(d.getId(),records )">{{ d.get('Name') }}
       </b-dropdown-item>
     </b-dropdown>
   </div>
@@ -19,8 +19,7 @@ import jp from "jsonpath";
 export default {
   name: "addToDigest",
   props: {
-    outbreakId: String,
-    outbreakRecord: Object,
+    records: Array,
     digests: Array
   },
 
@@ -28,17 +27,21 @@ export default {
 
   },
   methods: {
-    addToDigest(digestId, newsItem) {
-      const newsRecord = this.articlesToRecords([newsItem.originalJson])
-      const options = {
-        method: 'POST',
-        url: '/.netlify/functions/addToDigest',
-        data: JSON.stringify({digestId: digestId, newsItem: newsRecord}),
-        headers: {
-          'Content-type': 'application/json; charset=UTF-8'
-        }
-      };
-      axios.request(options).then(() => true).catch((err) => console.log(err))
+
+    addRecordsToDigest(digestId, records) {
+      records.forEach( r => {
+        const newsRecord = this.articlesToRecords([r.originalJson])
+        const options = {
+          method: 'POST',
+          url: '/.netlify/functions/addToDigest',
+          data: JSON.stringify({digestId: digestId, newsItem: newsRecord[0]}),
+          headers: {
+            'Content-type': 'application/json; charset=UTF-8'
+          }
+        };
+        axios.request(options).then(() => true).catch((err) => console.log(err))
+      })
+
     },
     articlesToRecords(articles) {
       let records = [];

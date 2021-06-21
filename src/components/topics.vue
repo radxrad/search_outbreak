@@ -21,7 +21,7 @@
       </div>
     </b-row>
     <b-row>{{ topicsAsText }} Showing:{{ recordCount }} of {{ queryResultsCount }}</b-row>
-
+    <addSearchToDigest :records="records"  :digests="digests"></addSearchToDigest>
     <b-card-group columns>
       <b-card v-for="r in records" v-bind:key="r._id">
         <b-card-header>
@@ -60,12 +60,13 @@ import date from 'date-and-time';
 import ds from '../datasources'
 
 import addToDigest from "./addToDigest";
-
+import addSearchToDigest from "./addSearchToDigest";
 
 export default {
   name: "topics",
   components: {
-    addToDigest
+    addToDigest,
+    addSearchToDigest
   },
   data() {
     return {
