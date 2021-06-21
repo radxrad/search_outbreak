@@ -61,9 +61,6 @@ const addNewsToDigest = async function (digestId, NewsRecord) {
 }
 const updateOrInsert =  function (record) {
     return new Promise((resolve, reject) => {
-        const Airtable = require('airtable')
-
-        const base = new Airtable({apiKey: process.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE)
 
         const primaryField = record.fields.slug;
         let table = base("News")
@@ -114,6 +111,17 @@ const updateOrInsert =  function (record) {
     })
 }
     console.log(newsItem)
+    try {
+        var slug = newsItem.fields.slug
+    } catch (ex){
+        console.error("no slug bad record. " + ex)
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                result: false
+            })
+        }
+    }
     console.log("slug: " + newsItem.fields.slug)
     const existingNewsItem = await base('News').select({filterByFormula: `{slug} = '${newsItem.fields.slug}'`}).all()
     console.log("isExisting:", existingNewsItem)
@@ -135,108 +143,4 @@ const updateOrInsert =  function (record) {
     }
 }
 
-exports.addNewsToDigest = async function (digestId, NewsRecord) {
 
-    const Airtable = require('airtable')
-
-    const base = new Airtable({apiKey: process.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE)
-    //let newsrecord = this.updateOrInsert(record)
-    console.log("NewsRecord:"+NewsRecord )
-    let table = base("Digests")
-    //console.log( await table.select().all())
-    console.log("digestid:" + digestId)
-    return table.find(`${digestId}`, function(err, digest) {
-
-
-            console.log("digest " + digest)
-            if (digest) {
-                console.log("digest news recs:" + digest.get('News').join(','))
-                let news = []
-                try {
-                    news= digest.get('News')
-                } catch (ex) {
-                    news=[]
-                }
-
-                news.push(NewsRecord.getId())
-                console.log('news all ' + news.join(','))
-                news = _.uniq(news)
-                console.log('news unique ' + news.join(','))
-                var now = new Date();
-                let dateUpdated =dateformat(now, "isoDate")
-                table.update(
-                    [{
-                    "id":digest.getId(),
-                    "fields": {
-                        "News": news,
-                        "Date updated":dateUpdated
-                         }
-                    }],
-                    function (err, arecord) {
-                        if (err) {
-                            console.error(err);
-                            Promise.reject(err);
-                        }
-
-                        Promise.resolve(true)
-                    }
-                );
-            }
-        }
-    )
-
-}
-exports.updateOrInsert =  function (record) {
-    return new Promise((resolve, reject) => {
-        const Airtable = require('airtable')
-
-        const base = new Airtable({apiKey: process.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE)
-
-        const primaryField = record.fields.slug;
-        let table = base("News")
-         table
-            .select({
-                maxRecords: 1,
-                view: "Grid view",
-                filterByFormula: `{slug} = "${primaryField}"`,
-            })
-            .firstPage(function (err, records) {
-                if (err) {
-                    console.error(err);
-                    reject(err);
-                }
-                records.forEach(function (r) {
-                    console.log("Retrieved", r.get("name"));
-
-                    table.replace(r.id, record.fields,
-                        function (err, arecord) {
-                            if (err) {
-                                console.error(err);
-                                reject(err);
-                            }
-                            // arecord.forEach(function (record) {
-                            //     console.log(record.getId());
-                            // });
-                            resolve(arecord)
-                        }
-                    );
-                });
-
-                if (!records.length) {
-                    console.log("empty");
-                    table.create(record.fields,
-                        function (err, arecord) {
-                            if (err) {
-                                console.error(err);
-                                reject(err);
-                            }
-                            // arecord.forEach(function (record) {
-                            //     console.log(record.getId());
-                            // });
-                            resolve(arecord)
-                        }
-                    );
-                }
-            });
-    })
-}
