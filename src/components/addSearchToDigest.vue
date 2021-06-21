@@ -29,7 +29,9 @@ export default {
   methods: {
 
     addRecordsToDigest(digestId, records) {
-      records.forEach( r => {
+      let limitedrecords =records.slice(0,20)
+
+      limitedrecords.forEach( r => {
         const newsRecord = this.articlesToRecords([r.originalJson])
         const options = {
           method: 'POST',
