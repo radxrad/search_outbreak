@@ -110,20 +110,18 @@ const updateOrInsert =  function (record) {
             });
     })
 }
-    console.log(newsItem)
-    try {
-        var slug = newsItem.fields.slug
-    } catch (ex){
-        console.error("no slug bad record. " + ex)
+    console.log("NewsItem: "+newsItem)
+    if (Array.isArray(newsItem)) {
         return {
             statusCode: 500,
             body: JSON.stringify({
-                result: false
+                result: false,
+                error: "should be a single item"
             })
         }
     }
     console.log("slug: " + newsItem.fields.slug)
-    const existingNewsItem = await base('News').select({filterByFormula: `{slug} = '${newsItem.fields.slug}'`}).all()
+    const existingNewsItem = await base('News').select({filterByFormula: `{slug} = '${slug}'`}).all()
     console.log("isExisting:", existingNewsItem)
     var recWithId= await updateOrInsert(newsItem)
     console.log(await recWithId)

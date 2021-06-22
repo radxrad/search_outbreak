@@ -33,7 +33,7 @@ export default {
       const options = {
         method: 'POST',
         url: '/.netlify/functions/addToDigest',
-        data: JSON.stringify({digestId: digestId, newsItem: newsRecord}),
+        data: JSON.stringify({digestId: digestId, newsItem: newsRecord[0]}),
         headers: {
           'Content-type': 'application/json; charset=UTF-8'
         }
