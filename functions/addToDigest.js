@@ -17,8 +17,11 @@ exports.handler = async function (event, context) {
         console.log("digestid:" + digestId)
         return table.find(`${digestId}`, function (err, digest) {
 
-
-                console.log("digest " + digest)
+                if (err){
+                    console.error(err);
+                    Promise.reject(err);
+                }
+                console.log("digest from find: " + digest)
                 if (digest) {
                     // console.log("digest news recs:" + digest.get('News').join(','))
                     let news = []
@@ -44,10 +47,9 @@ exports.handler = async function (event, context) {
                         }],
                         function (err, arecord) {
                             if (err) {
-                                console.error(err);
-                                Promise.reject(err);
-                            }
 
+                            }
+                            console.info('digest record ' + arecord[0].toString())
                             Promise.resolve(true)
                         }
                     );
