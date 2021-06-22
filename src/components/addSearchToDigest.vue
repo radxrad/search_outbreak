@@ -56,7 +56,7 @@ export default {
         var keywords = item.keywords ? item.keywords.join(' | ') : ""
         var author = 'Outbreak'
         var authors = jp.query(item, '$..author[*].name');
-        if (authors.length < 4) {
+        if (authors && authors.length < 4) {
           author = authors.join(', ')
         } else {
           author = authors[0] + ', et al.'

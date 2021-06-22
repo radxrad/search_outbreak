@@ -23,7 +23,7 @@ const addNewsToDigest = async function (digestId, NewsRecord) {
 
             console.log("digest " + digest)
             if (digest) {
-                console.log("digest news recs:" + digest.get('News').join(','))
+               // console.log("digest news recs:" + digest.get('News').join(','))
                 let news = []
                 try {
                     news= digest.get('News')
