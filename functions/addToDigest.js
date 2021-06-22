@@ -30,7 +30,7 @@ exports.handler = async function (event, context) {
                     } catch (ex) {
                         news = []
                     }
-
+                    if (news === undefined) { news = []}
                     news.push(NewsRecord.getId())
                     console.log('news all ' + news.join(','))
                     news = _.uniq(news)
