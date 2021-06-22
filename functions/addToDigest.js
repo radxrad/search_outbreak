@@ -121,7 +121,7 @@ const updateOrInsert =  function (record) {
         }
     }
     console.log("slug: " + newsItem.fields.slug)
-    const existingNewsItem = await base('News').select({filterByFormula: `{slug} = '${slug}'`}).all()
+    const existingNewsItem = await base('News').select({filterByFormula: `{slug} = '${newsItem.fields.slug}'`}).all()
     console.log("isExisting:", existingNewsItem)
     var recWithId= await updateOrInsert(newsItem)
     console.log(await recWithId)
