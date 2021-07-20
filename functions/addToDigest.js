@@ -48,9 +48,10 @@ exports.handler = async function (event, context) {
                         }],
                         function (err, arecord) {
                             if (err) {
+                                console.error(err)
                                 Promise.reject(err);
                             }
-                            console.info('digest record ' + arecord[0].toString())
+                            console.log('digest record ' + arecord[0].toString())
                             Promise.resolve(true)
                         }
                     );

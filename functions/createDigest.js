@@ -11,7 +11,7 @@ const { URL } = process.env
 
 // eslint-disable-next-line no-unused-vars
 exports.handler = async function (event, context) {
-
+    console.log("Create Digest: " )
     const Airtable = require('airtable')
     const base = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE)
     const {form} = JSON.parse(event.body)
@@ -150,7 +150,7 @@ exports.handler = async function (event, context) {
                 });
         })
     }
-    console.log("Create Digest: " )
+
     updateOrInsertDigest(form).then( (digestRecord)=>{
         let hostUrl = URL;
        let size = 200
@@ -218,7 +218,19 @@ exports.handler = async function (event, context) {
                                 'Content-type': 'application/json; charset=UTF-8'
                             }
                         };
-                        axios.request(options).then(() => true).catch((err) => console.log(err))
+                        axios.request(options).then(() =>  { return {
+                        statusCode: 200,
+                        body: JSON.stringify({
+                            result: true
+                        })
+                    }}).catch((err) => {
+                            console.log(err)
+                            return {
+                                statusCode: 200,
+                                body: JSON.stringify({
+                                    result: false
+                                })
+                            }})
                     }
 
                     )
@@ -229,17 +241,18 @@ exports.handler = async function (event, context) {
                 self.records = [] // bad
                 this.searchError = 'Error happened: ' + err;
                 this.showError = true;
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        result: false
+                    })
+                }
             })
 
     })
 
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify({
-            result: true
-        })
-    }
+
 }
 
 
