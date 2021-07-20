@@ -1,18 +1,26 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/radx-labcore.svg">
-    <topics />
+    <div>Prototyping</div>
+    <b-tabs content-class="mt-3">
+      <b-tab title="Create Digests" active><create-digests></create-digests></b-tab>
+      <b-tab title="News Selection"><topics /></b-tab>
+      <b-tab title="Disabled" disabled><p>I'm a disabled tab!</p></b-tab>
+    </b-tabs>
+
   </div>
 </template>
 
 <script>
 
 import topics from './components/topics.vue'
+import CreateDigests from "./components/CreateDigests";
 
 export default {
   name: 'App',
   components: {
-    topics
+    topics,
+    CreateDigests
   }
 }
 </script>

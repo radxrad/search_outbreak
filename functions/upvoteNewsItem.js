@@ -2,7 +2,6 @@
 require('dotenv').config()
 var _ = require('lodash')
 var dateformat = require('dateformat')
-var { URL } = process.env
 // eslint-disable-next-line no-unused-vars
 exports.handler = async function (event, context) {
 
@@ -10,7 +9,7 @@ exports.handler = async function (event, context) {
     const base = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE)
     const {digestId, newsItem} = JSON.parse(event.body)
     // functions for serverless functions
-    const addNewsToDigest = async function (digestId, NewsRecord) {
+    const updateCount = async function (NewsRecord) {
 
         console.log("NewsRecord:" + NewsRecord.toString())
         let table = base("Digests")
@@ -48,7 +47,7 @@ exports.handler = async function (event, context) {
                         }],
                         function (err, arecord) {
                             if (err) {
-
+                                console.error(err)
                             }
                             console.info('digest record ' + arecord[0].toString())
                             Promise.resolve(true)
@@ -59,57 +58,7 @@ exports.handler = async function (event, context) {
         )
 
     }
-    const updateOrInsert = function (record) {
-        return new Promise((resolve, reject) => {
 
-            const primaryField = record.fields.slug;
-            let table = base("News")
-            table
-                .select({
-                    maxRecords: 1,
-                    view: "Grid view",
-                    filterByFormula: `{slug} = "${primaryField}"`,
-                })
-                .firstPage(function (err, records) {
-                    if (err) {
-                        console.error(err);
-                        reject(err);
-                    }
-                    records.forEach(function (r) {
-                        console.log("Retrieved", r.get("name"));
-
-                        table.replace(r.id, record.fields,
-                            function (err, arecord) {
-                                if (err) {
-                                    console.error(err);
-                                    reject(err);
-                                }
-                                // arecord.forEach(function (record) {
-                                //     console.log(record.getId());
-                                // });
-                                resolve(arecord)
-                            }
-                        );
-                    });
-
-                    if (!records.length) {
-                        console.log("empty");
-                        table.create(record.fields,
-                            function (err, arecord) {
-                                if (err) {
-                                    console.error(err);
-                                    reject(err);
-                                }
-                                // arecord.forEach(function (record) {
-                                //     console.log(record.getId());
-                                // });
-                                resolve(arecord)
-                            }
-                        );
-                    }
-                });
-        })
-    }
     console.log("NewsItem: " + newsItem)
     if (Array.isArray(newsItem)) {
         return {

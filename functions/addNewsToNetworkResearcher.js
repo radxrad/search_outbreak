@@ -2,7 +2,6 @@
 require('dotenv').config()
 var _ = require('lodash')
 var dateformat = require('dateformat')
-var { URL } = process.env
 // eslint-disable-next-line no-unused-vars
 exports.handler = async function (event, context) {
 
@@ -13,7 +12,7 @@ exports.handler = async function (event, context) {
     const addNewsToDigest = async function (digestId, NewsRecord) {
 
         console.log("NewsRecord:" + NewsRecord.toString())
-        let table = base("Digests")
+        let table = base("Network")
         //console.log( await table.select().all())
         console.log("digestid:" + digestId)
         return table.find(`${digestId}`, function (err, digest) {
