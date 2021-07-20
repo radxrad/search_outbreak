@@ -156,7 +156,8 @@ data() {
   methods: {
     onSubmit(event) {
       event.preventDefault()
-      alert(JSON.stringify(this.form))
+      //alert(JSON.stringify(this.form))
+      console.log(JSON.stringify(this.form))
       const options = {
         method: 'POST',
         url: '/.netlify/functions/createDigest',
