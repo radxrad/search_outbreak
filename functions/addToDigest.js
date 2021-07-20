@@ -48,7 +48,7 @@ exports.handler = async function (event, context) {
                         }],
                         function (err, arecord) {
                             if (err) {
-
+                                Promise.reject(err);
                             }
                             console.info('digest record ' + arecord[0].toString())
                             Promise.resolve(true)
@@ -123,22 +123,33 @@ exports.handler = async function (event, context) {
     console.log("slug: " + newsItem.fields.slug)
     const existingNewsItem = await base('News').select({filterByFormula: `{slug} = '${newsItem.fields.slug}'`}).all()
     console.log("isExisting:", existingNewsItem)
-    var recWithId = await updateOrInsert(newsItem)
-    //console.log(await recWithId)
-    let success = false
-    // if (existingNewsItem.length > 0) {
-    //     success = await this.addNewsToDigest(digestId, existingNewsItem[0])
-    // } else {
-    //     success = await this.addNewsToDigest(digestId, recWithId)
-    // }
-    success = await addNewsToDigest(digestId, await recWithId)
-
-    return {
-        statusCode: 200,
-        body: JSON.stringify({
-            result: success
+    await updateOrInsert(newsItem).then(
+        (recWithId => {
+            //console.log(await recWithId)
+            let success = false
+            // if (existingNewsItem.length > 0) {
+            //     success = await this.addNewsToDigest(digestId, existingNewsItem[0])
+            // } else {
+            //     success = await this.addNewsToDigest(digestId, recWithId)
+            // }
+             addNewsToDigest(digestId,  recWithId).then( e => { return {
+                statusCode: 200,
+                body: JSON.stringify({
+                    result: e
+                })
+            }
+             } ).catch(e => { return {
+                 statusCode: 200,
+                 body: JSON.stringify({
+                     result: false
+                 })
+             }
+             } )
         })
-    }
+    ).catch( (err) => console.error(err))
+
+
+
 }
 
 
