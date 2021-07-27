@@ -2,7 +2,7 @@
 require('dotenv').config()
 var _ = require('lodash')
 var dateformat = require('dateformat')
-var { URL } = process.env
+var {URL} = process.env
 // eslint-disable-next-line no-unused-vars
 exports.handler = async function (event, context) {
 
@@ -18,7 +18,7 @@ exports.handler = async function (event, context) {
         console.log("digestid:" + digestId)
         return table.find(`${digestId}`, function (err, digest) {
 
-                if (err){
+                if (err) {
                     console.error(err);
                     Promise.reject(err);
                 }
@@ -31,27 +31,27 @@ exports.handler = async function (event, context) {
                     } catch (ex) {
                         news = []
                     }
-                    if (news === undefined) { news = []}
+                    if (news === undefined) {
+                        news = []
+                    }
                     news.push(NewsRecord.getId())
                     console.log('news all ' + news.join(','))
                     news = _.uniq(news)
                     console.log('news unique ' + news.join(','))
                     var now = new Date();
                     let dateUpdated = dateformat(now, "isoDate")
-                    table.update(
-                        [{
-                            "id": digest.getId(),
-                            "fields": {
-                                "News": news,
-                                "Date updated": dateUpdated
-                            }
-                        }],
+                    table.update(digest.getId(),
+                        {
+                            "News": news,
+                            "Date updated": dateUpdated
+
+                        },
                         function (err, arecord) {
                             if (err) {
                                 console.error(err)
                                 Promise.reject(err);
                             }
-                            console.log('digest record ' + arecord[0].toString())
+                           // console.log('digest record ' + arecord.toString())
                             Promise.resolve(true)
                         }
                     );
@@ -62,7 +62,7 @@ exports.handler = async function (event, context) {
     }
     const updateOrInsert = function (record) {
         return new Promise((resolve, reject) => {
-
+            let theRecord = record
             const primaryField = record.fields.slug;
             let table = base("News")
             table
@@ -72,22 +72,28 @@ exports.handler = async function (event, context) {
                     filterByFormula: `{slug} = "${primaryField}"`,
                 })
                 .firstPage(function (err, records) {
+
                     if (err) {
                         console.error(err);
                         reject(err);
                     }
                     records.forEach(function (r) {
                         console.log("Retrieved", r.get("name"));
-
-                        table.replace(r.id, record.fields,
+                          Object.assign(r.fields, theRecord.fields)
+                        theRecord.fields = _.omit(theRecord.fields, ["Name"])
+                        table.update(r.id, theRecord.fields,{typecast: true},
+                        //table.replace(r.id, record.fields, {typecast: true},
+                       // table.replace(r.id, r.fields,{typecast: true},
                             function (err, arecord) {
                                 if (err) {
                                     console.error(err);
                                     reject(err);
+
                                 }
                                 // arecord.forEach(function (record) {
                                 //     console.log(record.getId());
                                 // });
+                                console.log(arecord.getId());
                                 resolve(arecord)
                             }
                         );
@@ -95,15 +101,17 @@ exports.handler = async function (event, context) {
 
                     if (!records.length) {
                         console.log("empty");
-                        table.create(record.fields,
+                        table.create(record.fields, {typecast: true},
                             function (err, arecord) {
                                 if (err) {
                                     console.error(err);
                                     reject(err);
+
                                 }
                                 // arecord.forEach(function (record) {
                                 //     console.log(record.getId());
                                 // });
+                                console.log(arecord.getId());
                                 resolve(arecord)
                             }
                         );
@@ -122,9 +130,13 @@ exports.handler = async function (event, context) {
         }
     }
     console.log("slug: " + newsItem.fields.slug)
-    const existingNewsItem = await base('News').select({filterByFormula: `{slug} = '${newsItem.fields.slug}'`}).all()
-    console.log("isExisting:", existingNewsItem)
-    await updateOrInsert(newsItem).then(
+    // const existingNewsItem = await base('News').select({filterByFormula: `{slug} = '${newsItem.fields.slug}'`}).all()
+    // console.log("isExisting:", existingNewsItem)
+    // if (existingNewsItem.length > 0){
+    //     addNewsToDigest
+    // }
+    //await updateOrInsert(newsItem).then(
+       return updateOrInsert(newsItem).then(
         (recWithId => {
             //console.log(await recWithId)
             let success = false
@@ -133,22 +145,31 @@ exports.handler = async function (event, context) {
             // } else {
             //     success = await this.addNewsToDigest(digestId, recWithId)
             // }
-             addNewsToDigest(digestId,  recWithId).then( e => { return {
-                statusCode: 200,
-                body: JSON.stringify({
-                    result: e
-                })
-            }
-             } ).catch(e => { return {
-                 statusCode: 200,
-                 body: JSON.stringify({
-                     result: false
-                 })
-             }
-             } )
+            return addNewsToDigest(digestId, recWithId).then(e => {
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        result: true
+                    })
+                }
+            }).catch(e => {
+                return {
+                    statusCode: 500,
+                    body: JSON.stringify({
+                        result: false
+                    })
+                }
+            })
         })
-    ).catch( (err) => console.error(err))
-
+    ).catch((err) => {
+        console.error(err)
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                result: false
+            })
+        }
+    })
 
 
 }

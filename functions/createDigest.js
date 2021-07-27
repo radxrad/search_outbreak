@@ -7,16 +7,16 @@ var dateformat = require('dateformat')
 var axios = require('axios')
 const jp = require('jsonpath')
 var striptags = require('striptags');
-const { URL } = process.env
+const {URL} = process.env
 
 // eslint-disable-next-line no-unused-vars
 exports.handler = async function (event, context) {
-    console.log("Create Digest: " )
+    console.log("Create Digest: ")
     const Airtable = require('airtable')
     const base = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE)
     const {form} = JSON.parse(event.body)
     // functions for serverless functions
-    const createDigestRecord =  function (form) {
+    const createDigestRecord = function (form) {
 
         console.log("Form:" + form.toString())
         let table = base("Digests")
@@ -38,7 +38,7 @@ exports.handler = async function (event, context) {
                     'Date updated': dateCreated,
                     Creator: creator,
                     AdditionalQuery: digestQuery,
-                    Query:query,
+                    Query: query,
                     DigestType: 'UserSpecified'
 
 
@@ -50,7 +50,7 @@ exports.handler = async function (event, context) {
     }
     const updateOrInsertDigest = function (form) {
         return new Promise((resolve, reject) => {
-            let record =  createDigestRecord(form)
+            let record = createDigestRecord(form)
             const primaryField = record.fields.Title;
             let table = base("Digests")
             table
@@ -67,11 +67,26 @@ exports.handler = async function (event, context) {
                     records.forEach(function (r) {
                         console.log("Retrieved", r.get("name"));
 
-                        table.replace(r.id, record.fields,
+                        // table.replace(r.id, record.fields,
+                        //     function (err, arecord) {
+                        //         if (err) {
+                        //             console.error(err);
+                        //             reject(err);
+                        //         }
+                        //         // arecord.forEach(function (record) {
+                        //         //     console.log(record.getId());
+                        //         // });
+                        //         resolve(arecord)
+                        //     }
+                        // );
+                        // table.update([record.fields],
+                        // r.fields = Object.assign(r.fields, record.fields);
+                        table.update(r.id, record.fields, {typecast: true},
                             function (err, arecord) {
                                 if (err) {
                                     console.error(err);
                                     reject(err);
+                                    return;
                                 }
                                 // arecord.forEach(function (record) {
                                 //     console.log(record.getId());
@@ -83,11 +98,12 @@ exports.handler = async function (event, context) {
 
                     if (!records.length) {
                         console.log("empty");
-                        table.create(record.fields,
+                        table.create(record.fields, {typecast: true},
                             function (err, arecord) {
                                 if (err) {
                                     console.error(err);
                                     reject(err);
+                                    return;
                                 }
                                 // arecord.forEach(function (record) {
                                 //     console.log(record.getId());
@@ -114,15 +130,17 @@ exports.handler = async function (event, context) {
                     if (err) {
                         console.error(err);
                         reject(err);
+                        return
                     }
                     records.forEach(function (r) {
                         console.log("Retrieved", r.get("name"));
 
-                        table.replace(r.id, record.fields,
+                        table.replace(r.id, record.fields, {typecast: true},
                             function (err, arecord) {
                                 if (err) {
                                     console.error(err);
                                     reject(err);
+                                    return
                                 }
                                 // arecord.forEach(function (record) {
                                 //     console.log(record.getId());
@@ -134,11 +152,12 @@ exports.handler = async function (event, context) {
 
                     if (!records.length) {
                         console.log("empty");
-                        table.create(record.fields,
+                        table.create(record.fields, {typecast: true},
                             function (err, arecord) {
                                 if (err) {
                                     console.error(err);
                                     reject(err);
+                                    return
                                 }
                                 // arecord.forEach(function (record) {
                                 //     console.log(record.getId());
@@ -151,48 +170,48 @@ exports.handler = async function (event, context) {
         })
     }
 
-    updateOrInsertDigest(form).then( (digestRecord)=>{
+    return updateOrInsertDigest(form).then((digestRecord) => {
         let hostUrl = URL;
-       let size = 200
-           let baseurl = 'https://api.outbreak.info/resources/resource/query'
-            var self = this;
-            self.searchIsActive = true;
-            self.records = []
-            const options = {
-                method: 'GET',
-                url: baseurl,
-                params: {q: form.query, size: size, sort_by: 'relevancy'},
+        let size = 200
+        let baseurl = 'https://api.outbreak.info/resources/resource/query'
+        var self = this;
+        self.searchIsActive = true;
+        self.records = []
+        const options = {
+            method: 'GET',
+            url: baseurl,
+            params: {q: form.query, size: size, sort_by: 'relevancy'},
 
-            };
+        };
 
 
-            return axios.request(options).then(
-                // response => (console.log(response))
-                async function (response) {
-                    let articles = response.data.hits;
-                    self.records = []
-                    self.recordCount = response.data.hits.length;
-                    self.queryResultsCount = response.data.total;
-                    self.searchIsActive = false;
-                    articles.forEach((r) => {
-                        let originalJson = r
-                        let id = jp.value(r, '$._id')
-                        let title = jp.value(r, '$.name')
-                        // if (title.length === 1) {
-                        //     title = striptags(title[0])
-                        // }
-                        let description = jp.value(r, '$.abstract')
-                        // if (description.length === 1) {
-                        //     description = striptags(description[0])
-                        // }
-                        let authors = jp.query(r, '$.author[*].name', 3)
-                        let journal = jp.value(r, '$.journalAbbreviation')
-                        let pubtype = jp.value(r, '$.publicationType[*]')
-                        let pubDate = jp.value(r, '$.datePublished')
-                        let created = jp.value(r, '$.dateCreated')
-                        let curationDate = jp.value(r, '$.curatedBy.curationDate')
-                        let url = jp.value(r, '$.url')
-                        self.records.push({
+        return axios.request(options).then(
+            // response => (console.log(response))
+            async function (response) {
+                let articles = response.data.hits;
+                self.records = []
+                self.recordCount = response.data.hits.length;
+                self.queryResultsCount = response.data.total;
+                self.searchIsActive = false;
+                articles.forEach((r) => {
+                    let originalJson = r
+                    let id = jp.value(r, '$._id')
+                    let title = jp.value(r, '$.name')
+                    // if (title.length === 1) {
+                    //     title = striptags(title[0])
+                    // }
+                    let description = jp.value(r, '$.abstract')
+                    // if (description.length === 1) {
+                    //     description = striptags(description[0])
+                    // }
+                    let authors = jp.query(r, '$.author[*].name', 3)
+                    let journal = jp.value(r, '$.journalAbbreviation')
+                    let pubtype = jp.value(r, '$.publicationType[*]')
+                    let pubDate = jp.value(r, '$.datePublished')
+                    let created = jp.value(r, '$.dateCreated')
+                    let curationDate = jp.value(r, '$.curatedBy.curationDate')
+                    let url = jp.value(r, '$.url')
+                    self.records.push({
                             fields: {
                                 Title: title,
                                 Abstract: description,
@@ -205,11 +224,10 @@ exports.handler = async function (event, context) {
                                 slug: "outbreak-" + id,
                             }
                         }
-                        )
+                    )
 
-                    })
-                    self.records.forEach((rec) =>
-                    {
+                })
+                self.records.forEach((rec) => {
                         const options = {
                             method: 'POST',
                             url: `${hostUrl}/.netlify/functions/addToDigest`,
@@ -218,39 +236,40 @@ exports.handler = async function (event, context) {
                                 'Content-type': 'application/json; charset=UTF-8'
                             }
                         };
-                        axios.request(options).then(() =>  { return {
-                        statusCode: 200,
-                        body: JSON.stringify({
-                            result: true
-                        })
-                    }}).catch((err) => {
-                            console.log(err)
+                        return axios.request(options).then(() => {
                             return {
                                 statusCode: 200,
                                 body: JSON.stringify({
+                                    result: true
+                                })
+                            }
+                        }).catch((err) => {
+                            console.log(err)
+                            return {
+                                statusCode: 500,
+                                body: JSON.stringify({
                                     result: false
                                 })
-                            }})
+                            }
+                        })
                     }
+                )
 
-                    )
 
-
-                }).catch( err =>{
-                console.log('search error: ' + err)
-                self.records = [] // bad
-                this.searchError = 'Error happened: ' + err;
-                this.showError = true;
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({
-                        result: false
-                    })
-                }
-            })
+            }).catch(err => {
+            console.log('search error: ' + err)
+            self.records = [] // bad
+            this.searchError = 'Error happened: ' + err;
+            this.showError = true;
+            return {
+                statusCode: 500,
+                body: JSON.stringify({
+                    result: false
+                })
+            }
+        })
 
     })
-
 
 
 }
