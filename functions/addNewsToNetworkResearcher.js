@@ -2,54 +2,57 @@
 require('dotenv').config()
 var _ = require('lodash')
 var dateformat = require('dateformat')
+const Airtable = require("airtable");
+var {URL} = process.env
 // eslint-disable-next-line no-unused-vars
 exports.handler = async function (event, context) {
-
+    const associatedNewsField = 'Network'
     const Airtable = require('airtable')
     const base = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE)
     const {digestId, newsItem} = JSON.parse(event.body)
     // functions for serverless functions
-    const addNewsToDigest = async function (digestId, NewsRecord) {
+    const addNewsToNetworkResearcher = async function (associatedId, NewsRecord) {
 
-        console.log("NewsRecord:" + NewsRecord.toString())
-        let table = base("Network")
+        console.log("Researcher:" + NewsRecord.toString())
+        let table = base("Digests")
         //console.log( await table.select().all())
-        console.log("digestid:" + digestId)
-        return table.find(`${digestId}`, function (err, digest) {
+        console.log("Researcher:" + associatedId)
+        return table.find(`${associatedId}`, function (err, associated) {
 
-                if (err){
+                if (err) {
                     console.error(err);
                     Promise.reject(err);
                 }
-                console.log("digest from find: " + digest)
-                if (digest) {
-                    // console.log("digest news recs:" + digest.get('News').join(','))
+                console.log("associated from find: " + associated)
+                if (associated) {
+                    // console.log("associated news recs:" + associated.get('News').join(','))
                     let news = []
                     try {
-                        news = digest.get('News')
+                        news = associated.get('News')
                     } catch (ex) {
                         news = []
                     }
-                    if (news === undefined) { news = []}
+                    if (news === undefined) {
+                        news = []
+                    }
                     news.push(NewsRecord.getId())
                     console.log('news all ' + news.join(','))
                     news = _.uniq(news)
                     console.log('news unique ' + news.join(','))
                     var now = new Date();
                     let dateUpdated = dateformat(now, "isoDate")
-                    table.update(
-                        [{
-                            "id": digest.getId(),
-                            "fields": {
-                                "News": news,
-                                "Date updated": dateUpdated
-                            }
-                        }],
+                    table.update(associated.getId(),
+                        {
+                            "News": news,
+                            "Date updated": dateUpdated
+
+                        },
                         function (err, arecord) {
                             if (err) {
-
+                                console.error(err)
+                                Promise.reject(err);
                             }
-                            console.info('digest record ' + arecord[0].toString())
+                            // console.log('associated record ' + arecord.toString())
                             Promise.resolve(true)
                         }
                     );
@@ -58,9 +61,9 @@ exports.handler = async function (event, context) {
         )
 
     }
-    const updateOrInsert = function (record) {
+    const updateOrInsert = function (record, digestId) {
         return new Promise((resolve, reject) => {
-
+            let theRecord = record
             const primaryField = record.fields.slug;
             let table = base("News")
             table
@@ -70,22 +73,33 @@ exports.handler = async function (event, context) {
                     filterByFormula: `{slug} = "${primaryField}"`,
                 })
                 .firstPage(function (err, records) {
+
                     if (err) {
                         console.error(err);
                         reject(err);
                     }
                     records.forEach(function (r) {
+                        if (r.fields[associatedNewsField] !== undefined && Array.isArray(r.fields[associatedNewsField])){
+                            r.fields[associatedNewsField].push( digestId)
+                        } else {
+                            r.fields[associatedNewsField] = [ digestId]
+                        }
                         console.log("Retrieved", r.get("name"));
-
-                        table.replace(r.id, record.fields,
+                        Object.assign(r.fields, theRecord.fields)
+                        theRecord.fields = _.omit(r.fields, ["Name"])
+                        table.update(r.id, theRecord.fields,{typecast: true},
+                            //table.replace(r.id, record.fields, {typecast: true},
+                            // table.replace(r.id, r.fields,{typecast: true},
                             function (err, arecord) {
                                 if (err) {
                                     console.error(err);
                                     reject(err);
+
                                 }
                                 // arecord.forEach(function (record) {
                                 //     console.log(record.getId());
                                 // });
+                                console.log(arecord.getId());
                                 resolve(arecord)
                             }
                         );
@@ -93,15 +107,18 @@ exports.handler = async function (event, context) {
 
                     if (!records.length) {
                         console.log("empty");
-                        table.create(record.fields,
+                        record.fields[associatedNewsField] = [ digestId]
+                        table.create(record.fields, {typecast: true},
                             function (err, arecord) {
                                 if (err) {
                                     console.error(err);
                                     reject(err);
+
                                 }
                                 // arecord.forEach(function (record) {
                                 //     console.log(record.getId());
                                 // });
+                                console.log(arecord.getId());
                                 resolve(arecord)
                             }
                         );
@@ -120,24 +137,57 @@ exports.handler = async function (event, context) {
         }
     }
     console.log("slug: " + newsItem.fields.slug)
-    const existingNewsItem = await base('News').select({filterByFormula: `{slug} = '${newsItem.fields.slug}'`}).all()
-    console.log("isExisting:", existingNewsItem)
-    var recWithId = await updateOrInsert(newsItem)
-    //console.log(await recWithId)
-    let success = false
-    // if (existingNewsItem.length > 0) {
-    //     success = await this.addNewsToDigest(digestId, existingNewsItem[0])
-    // } else {
-    //     success = await this.addNewsToDigest(digestId, recWithId)
+    // const existingNewsItem = await base('News').select({filterByFormula: `{slug} = '${newsItem.fields.slug}'`}).all()
+    // console.log("isExisting:", existingNewsItem)
+    // if (existingNewsItem.length > 0){
+    //     addNewsToDigest
     // }
-    success = await addNewsToDigest(digestId, await recWithId)
+    //await updateOrInsert(newsItem).then(
+    return updateOrInsert(newsItem, digestId).then(
+        recWithId => { console.log( recWithId)
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify({
-            result: success
-        })
-    }
+            return {
+                statusCode: 200,
+                body: JSON.stringify({
+                    result: true
+                })
+            }
+        }
+        // (recWithId => {
+        //     //console.log(await recWithId)
+        //     let success = false
+        //     // if (existingNewsItem.length > 0) {
+        //     //     success = await this.addNewsToDigest(digestId, existingNewsItem[0])
+        //     // } else {
+        //     //     success = await this.addNewsToDigest(digestId, recWithId)
+        //     // }
+        //     return addNewsToDigest(digestId, recWithId).then(e => {
+        //         return {
+        //             statusCode: 200,
+        //             body: JSON.stringify({
+        //                 result: true
+        //             })
+        //         }
+        //     }).catch(e => {
+        //         return {
+        //             statusCode: 500,
+        //             body: JSON.stringify({
+        //                 result: false
+        //             })
+        //         }
+        //     })
+        // })
+    ).catch((err) => {
+        console.error(err)
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                result: false
+            })
+        }
+    })
+
+
 }
 
 

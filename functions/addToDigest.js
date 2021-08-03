@@ -60,7 +60,7 @@ exports.handler = async function (event, context) {
         )
 
     }
-    const updateOrInsert = function (record) {
+    const updateOrInsert = function (record, digestId) {
         return new Promise((resolve, reject) => {
             let theRecord = record
             const primaryField = record.fields.slug;
@@ -78,9 +78,14 @@ exports.handler = async function (event, context) {
                         reject(err);
                     }
                     records.forEach(function (r) {
+                        if (r.fields["Digests"] !== undefined && Array.isArray(r.fields["Digests"])){
+                            r.fields["Digests"].push( digestId)
+                        } else {
+                            r.fields["Digests"] = [ digestId]
+                        }
                         console.log("Retrieved", r.get("name"));
                           Object.assign(r.fields, theRecord.fields)
-                        theRecord.fields = _.omit(theRecord.fields, ["Name"])
+                        theRecord.fields = _.omit(r.fields, ["Name"])
                         table.update(r.id, theRecord.fields,{typecast: true},
                         //table.replace(r.id, record.fields, {typecast: true},
                        // table.replace(r.id, r.fields,{typecast: true},
@@ -101,6 +106,7 @@ exports.handler = async function (event, context) {
 
                     if (!records.length) {
                         console.log("empty");
+                        record.fields["Digests"] = [ digestId]
                         table.create(record.fields, {typecast: true},
                             function (err, arecord) {
                                 if (err) {
@@ -136,31 +142,40 @@ exports.handler = async function (event, context) {
     //     addNewsToDigest
     // }
     //await updateOrInsert(newsItem).then(
-       return updateOrInsert(newsItem).then(
-        (recWithId => {
-            //console.log(await recWithId)
-            let success = false
-            // if (existingNewsItem.length > 0) {
-            //     success = await this.addNewsToDigest(digestId, existingNewsItem[0])
-            // } else {
-            //     success = await this.addNewsToDigest(digestId, recWithId)
-            // }
-            return addNewsToDigest(digestId, recWithId).then(e => {
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({
-                        result: true
-                    })
-                }
-            }).catch(e => {
-                return {
-                    statusCode: 500,
-                    body: JSON.stringify({
-                        result: false
-                    })
-                }
-            })
-        })
+       return updateOrInsert(newsItem, digestId).then(
+           recWithId => { console.log( recWithId)
+
+               return {
+                           statusCode: 200,
+                           body: JSON.stringify({
+                               result: true
+                           })
+                       }
+                       }
+        // (recWithId => {
+        //     //console.log(await recWithId)
+        //     let success = false
+        //     // if (existingNewsItem.length > 0) {
+        //     //     success = await this.addNewsToDigest(digestId, existingNewsItem[0])
+        //     // } else {
+        //     //     success = await this.addNewsToDigest(digestId, recWithId)
+        //     // }
+        //     return addNewsToDigest(digestId, recWithId).then(e => {
+        //         return {
+        //             statusCode: 200,
+        //             body: JSON.stringify({
+        //                 result: true
+        //             })
+        //         }
+        //     }).catch(e => {
+        //         return {
+        //             statusCode: 500,
+        //             body: JSON.stringify({
+        //                 result: false
+        //             })
+        //         }
+        //     })
+        // })
     ).catch((err) => {
         console.error(err)
         return {
