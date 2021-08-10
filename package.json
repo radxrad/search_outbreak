@@ -20,9 +20,11 @@
     "core-js": "^3.6.5",
     "date-and-time": "^1.0.1",
     "dateformat": "^4.5.1",
+    "doi-regex": "^0.1.10",
     "jsonpath": "^1.1.1",
     "netlify-cli": "^3.37.29",
     "netlify-lambda": "^2.0.9",
+    "node-summary": "^1.2.0",
     "striptags": "^3.1.1",
     "vue": "^2.6.11"
   },

@@ -223,7 +223,7 @@ data() {
     //   }
     //   return qs
     // },
-    createQueryString() {
+    createBaseQueryString() {
       var qs = ""
       var digestQuery = this.form.digestQueryString == "" ? '' :` AND ( ${this.form.digestQueryString} )`
 
@@ -233,11 +233,25 @@ data() {
       } else {
         qs = this.form.digestQueryTopics.map(t => t.get('OutbreakQuery')).join(' AND ') + ' AND ' + this.alwaysUse+ digestQuery
       }
+      this.form.query= qs // we want to store sans data
+      return qs
+    },
+    createQueryString() {
+      var qs = ""
+      // var digestQuery = this.form.digestQueryString == "" ? '' :` AND ( ${this.form.digestQueryString} )`
+      //
+      // if (this.form.digestQueryTopics.length === 0) {
+      //   qs =  this.alwaysUse +  digestQuery
+      //   // qs = this.topics.map(t => t.get('OutbreakQuery')).join(' OR ') + ' AND ' + this.alwaysUse
+      // } else {
+      //   qs = this.form.digestQueryTopics.map(t => t.get('OutbreakQuery')).join(' AND ') + ' AND ' + this.alwaysUse+ digestQuery
+      // }
+      qs = this.createBaseQueryString()
       if (this.activeDateSelector !=='All' ){
         var dateQuery = this.dateSelectors.find(t => t.title === this.activeDateSelector)
         qs = `${dateQuery.query} AND ( ${qs} )`
       }
-      this.form.query= qs
+      //this.form.query= qs // we want to store sans data
       return qs
     },
     queryOutbreak(queryString, size = 200, baseurl = 'https://api.outbreak.info/resources/resource/query') {
