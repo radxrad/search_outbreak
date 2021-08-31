@@ -6,6 +6,7 @@
       <b-tab title="Create Digests" active><create-digests></create-digests></b-tab>
       <b-tab title="News Selection"><topics /></b-tab>
       <b-tab title="Add to Curated"><add-by-doi /></b-tab>
+      <b-tab title="Add to Researcher"><addToResearcher /></b-tab>
       <b-tab title="Disabled" disabled><p>I'm a disabled tab!</p></b-tab>
     </b-tabs>
 
@@ -17,13 +18,15 @@
 import topics from './components/topics.vue'
 import CreateDigests from "./components/CreateDigests";
 import addByDoi from "./components/addByDoi";
+import addToResearcher from "./components/addToResearcher";
 
 export default {
   name: 'App',
   components: {
     topics,
     CreateDigests,
-    addByDoi
+    addByDoi,
+    addToResearcher
   }
 }
 </script>

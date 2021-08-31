@@ -10,17 +10,20 @@
       </b-form-group>
       <b-row>
 
-          <span class="mx-2">Select Topics:</span> <span> Thes topics are expanded to multiple keywords</span>
+          <span class="mx-2">Select Topics:</span> <span>  These topics are expanded to multiple keywords</span>
           <div class="h3">  <b-badge :variant="form.digestQueryTopics.length === 0?  'primary':'secondary' " @click="selectTopic('All',$event)">
           None
         </b-badge>
-          <b-badge class="m-1" :variant="form.digestQueryTopics.find(a => a.get('Name')== t.get('Name') )?  'primary':'secondary' "
-                   @click="selectTopic(t.get('Name'),$event)" v-for=" t in topics.filter( a => a.get('Group') === undefined ) " v-bind:key="t.get('Name')">{{ t.get('Name') }}
+          <b-badge class="m-1" :variant="form.digestQueryTopics.find(a => a.get('Title')== t.get('Title') )?  'primary':'secondary' "
+                   @click="selectTopic(t.get('Title'),$event)" v-for=" t in topics.filter( a => a.get('Group') === undefined ) " v-bind:key="t.get('Name')">{{ t.get('Name') }}
           </b-badge>
         </div>
       </b-row>
+
+
       <b-form-input v-model="form.digestQueryTopics" hidden></b-form-input>
       <b-form-input v-model="form.digestDateSelector" hidden></b-form-input>
+
       <b-form-group label="Additional Terms" label-for="digestQuery"  label-align="left">
         <b-form-input id="digestQuery" v-model="form.digestQueryString" placeholder="Additional Terms"
         v-on:change="updateUserQuery"></b-form-input>
@@ -93,7 +96,8 @@ data() {
       digestQueryTopics: [],
       digestDateSelector:"One week",
       digestQueryString:"",
-      query: ""
+      query: "",
+      digestArticles: []
     },
     records: [],
     recordCount: 0,
@@ -105,6 +109,7 @@ data() {
     activeQueryString: "",
 
     activeDateSelector: "One week",
+    ActivePublicationType: "Journal Article",
     alwaysUse: '( (COVID || coronavirus || SARS-COV2) AND @type:Publication )',
 
     dateSelectors: [
@@ -116,8 +121,26 @@ data() {
       {title: 'Six months', query: `( date:>${date.format(date.addMonths(new Date(), -6), 'YYYY-MM-DD' )})`},
 
     ],
+    //publicationType
+    publicationSelectors: [
+      //  {title: 'One day', query: `( date:>${date.format(date.addDays(new Date(), -1), 'YYYY-MM-DD' )})`},
+      {title: 'Journal Article', query: `( publicationType:"Journal Article")`},
+      {title: 'PrePrint', query:  `( publicationType:"Journal Article")`},
+      {title: 'Review', query:  `( publicationType:"Review")`},
+      {title: 'Clinical Study', query:  `( publicationType:"Clinical Study")`},
+      {title: 'All', query:  `( publicationType:*)`},
+
+    ],
+    PreferedPublicationSelectors: [
+      //  {title: 'One day', query: `( date:>${date.format(date.addDays(new Date(), -1), 'YYYY-MM-DD' )})`},
+      {title: 'Clin Infect Dis', query: `( "journalAbbreviation":"Clin Infect Dis")`},
+      {title: 'Infect Dis Now', query:  `( "journalAbbreviation":"Infect Dis Now")`},
+      {title: 'Any', query:  `( "journalAbbreviation":*)`},
+
+    ],
     topics: [],
-    digests: []
+    digests: [],
+
   }
 },
   mounted() {
@@ -210,6 +233,21 @@ data() {
       this.queryOutbreak(this.createQueryString())
     }
     ,
+    selectPublicationb(item, event) {
+      console.log(event)
+      if (item === 'None') {
+        this.form.PreferedPublicationSelectors = []
+        this.queryOutbreak(this.createQueryString())
+      } else {
+        if (this.form.PreferedPublicationSelectors.find(t => t.get('Title') === item)) {
+          this.form.PreferedPublicationSelectors = this.form.v.filter(t => t.get('Title') !== item)
+        } else {
+          this.form.PreferedPublicationSelectors.push(this.topics.find(t => t.get('Title') === item))
+        }
+
+        this.queryOutbreak(this.createQueryString())
+      }
+    },
     // createQueryString() {
     //   var qs = ""
     //   if (this.activeQueryTopics.length === 0) {
@@ -254,7 +292,7 @@ data() {
       //this.form.query= qs // we want to store sans data
       return qs
     },
-    queryOutbreak(queryString, size = 200, baseurl = 'https://api.outbreak.info/resources/resource/query') {
+    queryOutbreak(queryString, size = 200, baseurl = 'https://api.outbreak.info/resources/Publications/query') {
       var self = this;
       self.searchIsActive = true;
       self.records = []
