@@ -14,8 +14,8 @@
           <div class="h3">  <b-badge :variant="form.digestQueryTopics.length === 0?  'primary':'secondary' " @click="selectTopic('All',$event)">
           None
         </b-badge>
-          <b-badge class="m-1" :variant="form.digestQueryTopics.find(a => a.get('Title')== t.get('Title') )?  'primary':'secondary' "
-                   @click="selectTopic(t.get('Title'),$event)" v-for=" t in topics.filter( a => a.get('Group') === undefined ) " v-bind:key="t.get('Name')">{{ t.get('Name') }}
+          <b-badge class="m-1" :variant="form.digestQueryTopics.find(a => a.get('Name')== t.get('Name') )?  'primary':'secondary' "
+                   @click="selectTopic(t.get('Name'),$event)" v-for=" t in topics.filter( a => a.get('Group') === undefined ) " v-bind:key="t.get('Name')">{{ t.get('Name') }}
           </b-badge>
         </div>
       </b-row>
@@ -108,17 +108,17 @@ data() {
     activeQueryTopics: [],
     activeQueryString: "",
 
-    activeDateSelector: "One week",
+    activeDateSelector: "Two weeks",
     ActivePublicationType: "Journal Article",
-    alwaysUse: '( (COVID || coronavirus || SARS-COV2) AND @type:Publication )',
-
+  //  alwaysUse: '( (COVID || coronavirus || SARS-COV2) AND @type:Publication )',
+    alwaysUse: ' (COVID || coronavirus || SARS-COV2)',
     dateSelectors: [
       //  {title: 'One day', query: `( date:>${date.format(date.addDays(new Date(), -1), 'YYYY-MM-DD' )})`},
-      {title: 'One week', query: `( date:>${date.format(date.addDays(new Date(), -7), 'YYYY-MM-DD' )})`},
+      {title: 'One week', query: `( dateCreated:>${date.format(date.addDays(new Date(), -7), 'YYYY-MM-DD' )})`},
       {title: 'Two weeks', query: `( date:>${date.format(date.addDays(new Date(), -14), 'YYYY-MM-DD' )})`},
-      {title: 'One month', query: `( date:>${date.format(date.addMonths(new Date(), -1), 'YYYY-MM-DD' )})`},
-      {title: 'Three months', query: `( date:>${date.format(date.addMonths(new Date(), -3), 'YYYY-MM-DD' )})`},
-      {title: 'Six months', query: `( date:>${date.format(date.addMonths(new Date(), -6), 'YYYY-MM-DD' )})`},
+      {title: 'One month', query: `( dateCreated:>${date.format(date.addMonths(new Date(), -1), 'YYYY-MM-DD' )})`},
+      {title: 'Three months', query: `( dateCreated:>${date.format(date.addMonths(new Date(), -3), 'YYYY-MM-DD' )})`},
+      {title: 'Six months', query: `( dateCreated:>${date.format(date.addMonths(new Date(), -6), 'YYYY-MM-DD' )})`},
 
     ],
     //publicationType
@@ -197,7 +197,7 @@ data() {
       // Reset our form values
       this.form.digestTitle = ''
       this.form.digestCreator = ''
-      this.form.digestQueryTopics = ''
+
       this.form.digestQueryTopics = []
       this.form.digestQueryString =''
       // Trick to reset/clear native browser form validation state
@@ -320,6 +320,9 @@ data() {
                 title = striptags(title[0])
               }
               let description = jp.query(r, '$.abstract', 1)
+              if (description.length === 0){
+                description = jp.query(r, '$.description', 1)
+              }
               if (description.length === 1) {
                 description = striptags(description[0])
               }

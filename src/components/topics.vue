@@ -198,7 +198,7 @@ export default {
       }
       return qs
     },
-    queryOutbreak(queryString, size = 200, baseurl = 'https://api.outbreak.info/resources/resource/query') {
+    queryOutbreak(queryString, size = 200, baseurl = 'https://api.outbreak.info/resources/Publications/query') {
       var self = this;
       self.searchIsActive = true;
       self.records = []
